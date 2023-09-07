@@ -27,7 +27,12 @@ $payload = [
 
 $access_token_details = JWT::encode($payload, $key, 'HS256');
 echo $access_token_details;
-echo 123; 
+echo "</br>" . 123; 
+
+$decoded = JWT::decode($access_token_details, new Key($key, 'HS256'));
+print_r($decoded);
+
+
 
 ?>
 
