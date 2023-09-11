@@ -309,4 +309,8 @@ function decoding_access_code($access_token_details){
  
 // git push request from Simon Local
 
+<<<<<<< HEAD
 // Another Change from Local
+=======
+// Another Change from Github
+>>>>>>> e3626c79aac4a068b7fce76f1535bf3545f790a8
