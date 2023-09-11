@@ -304,12 +304,8 @@ function generate_or_get_access_token($username, $password) {
 function decoding_access_code($access_token_details){
   $key = '2511ad';
   $decoded = JWT::decode($access_token_details, new Key($key, 'HS256'));
-
-  return $decoded;   
-  
+  return $decoded; 
 }
  
-
-
 // API with Parameters
 // http://localhost/wpAPI/wp-json/custom/v1/get-access-token?username=admin&password=admin
