@@ -114,31 +114,70 @@ function custom_post_type_restaurant() {
 
 
 
+add_filter( 'rest_endpoints', function( $endpoints ) {
+  // Get the endpoints that you want to allow.
+  $allowed_endpoints = array(
+    '/custom/v1/get-access-token',
+    '/wp/v2/posts',
+    '/wp/v2/pages',
+    '/wp/v2/users',
+    '/wp/v2/restaurant',
+    '/custom/v1/view-restaurant',
+  );
 
-// function restrict_rest_api_to_logged_in_users() {
-//   if (!is_user_logged_in()) {
-//       // Disable REST API for non-logged-in users.
-//       return new WP_Error(
-//           'rest_not_logged_in',
-//           __('You are not currently logged in.'),
-//           array('status' => 401)
-//       );
-//   }
-//   return null; // Allow access for logged-in users.
-// }
+  // Remove all other endpoints.
+  foreach ( $endpoints as $endpoint => $data ) {
+    if ( ! in_array( $endpoint, $allowed_endpoints ) ) {
+      unset( $endpoints[$endpoint] );
+    }
+  }
 
-// add_filter('rest_authentication_errors', 'restrict_rest_api_to_logged_in_users');
+  return $endpoints;
+} );
 
 
 // Register a custom REST API endpoint for token retrieval
-function custom_rest_api_endpoint() {
+function custom_rest_api_endpoint_get_access_token() {
   register_rest_route('custom/v1', '/get-access-token', array(
       'methods' => 'POST',
       'callback' => 'get_access_token',
   ));
 }
-add_action('rest_api_init', 'custom_rest_api_endpoint');
+add_action('rest_api_init', 'custom_rest_api_endpoint_get_access_token');
 
+// Register a custom REST API endpoint for token retrieval
+function custom_rest_api_endpoint_get_view_restaurant() {
+  register_rest_route('custom/v1', '/view-restaurant', array(
+      'methods' => 'GET',
+      'callback' => 'get_view_restaurant',
+  ));
+}
+add_action('rest_api_init', 'custom_rest_api_endpoint_get_view_restaurant');
+
+
+function get_view_restaurant( $request ){
+  $headers = getallheaders();
+  if (isset($headers['Authorization'])) { 
+    $authorization = explode(' ', $headers['Authorization']);
+    //return $authorization;
+    switch ($authorization[0]) {
+      case 'Basic':
+        // Handle basic authentication.
+        break;
+      case 'Bearer':
+        // Handle bearer authentication.
+        $access_code = $authorization[1];
+        $decoded_code = decoding_access_code($access_code);
+
+        return $decoded_code;
+
+        break;
+      default:
+        // Handle other authentication schemes.
+    }
+  }
+
+}
 
 
 // Callback function for generating and returning an access token
@@ -219,7 +258,6 @@ use Firebase\JWT\Key;
 
 function generate_or_get_access_token($username, $password) {
 
-
   // Check if an access token and its expiration timestamp are stored in options
   $access_token = get_option('custom_access_token', '');
   $expiration_timestamp = get_option('custom_access_token_expiration', 0);
@@ -228,7 +266,8 @@ function generate_or_get_access_token($username, $password) {
   $current_timestamp = time();
 
   // If the access token is empty or it has expired, generate a new one
-  if (empty($access_token) || $current_timestamp > $expiration_timestamp) {
+  // if (empty($access_token) || $current_timestamp > $expiration_timestamp) { }
+
       // Generate a new access token
       $key = '2511ad';
       $payload = [
@@ -246,7 +285,7 @@ function generate_or_get_access_token($username, $password) {
       // Store the new access token and its expiration timestamp in options
       update_option('custom_access_token', $access_token);
       update_option('custom_access_token_expiration', $expiration_timestamp);
-  }
+
 
   $expiration_human_readable = date('Y-m-d H:i:s', $expiration_timestamp);
 
@@ -262,7 +301,11 @@ function generate_or_get_access_token($username, $password) {
   //return $access_token;
 }
 
-
-
+function decoding_access_code($access_token_details){
+  $key = '2511ad';
+  $decoded = JWT::decode($access_token_details, new Key($key, 'HS256'));
+  return $decoded; 
+}
+ 
 // API with Parameters
 // http://localhost/wpAPI/wp-json/custom/v1/get-access-token?username=admin&password=admin
