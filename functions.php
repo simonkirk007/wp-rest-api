@@ -307,5 +307,3 @@ function decoding_access_code($access_token_details){
   return $decoded; 
 }
  
-// API with Parameters
-// http://localhost/wpAPI/wp-json/custom/v1/get-access-token?username=admin&password=admin
